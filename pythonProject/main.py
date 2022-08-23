@@ -6,18 +6,11 @@ import sqlite3 as sql
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SECRET_KEY'] = "random string"
 
 db = SQLAlchemy(app)
-
-
-class students(db.Model):
-    id = db.Column('student_id', db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    city = db.Column(db.String(50))
-    addr = db.Column(db.String(200))
-    pin = db.Column(db.String(10))
+engine = create_engine('sqlite://', echo=False)
 
 
 @app.route("/")
@@ -31,6 +24,13 @@ def upload():
         return render_template("upload.html")
     df = pd.read_csv(request.files.get('file'))
     return render_template('upload.html', shape=df.shape, columns=df.columns.values)
+
+
+@app.route('/test')
+def test():
+    df0 = pd.DataFrame({'name': ['user01', 'user02', 'user03']})
+    df0.to_sql('users', con=engine)
+    return engine.execute("SELECT * FROM users").fetchall()
 
 
 @app.route('/user_form')
@@ -48,8 +48,8 @@ def user_info():
             with sql.connect("database.db") as con:
                 cur = con.cursor()
 
-            cur.execute("INSERT INTO users (email, name) VALUES (?,?)", (user_email, user_name))
-            msg = "Success"
+                cur.execute("INSERT INTO users (email, name) VALUES (?,?)", (user_email, user_name))
+                msg = "Success"
 
         except:
             con.rollback()
@@ -73,5 +73,4 @@ def list():
 
 
 if __name__ == "__main__":
-    db.create_all()
     app.run()
