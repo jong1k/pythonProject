@@ -1,10 +1,21 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>home</title>
+    <title>Title</title>
 </head>
 <body>
-    <h1>Home</h1>
+<form action="http://localhost:5000/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <input type="submit" value="Upload File">
+</form>
+<form action="http://localhost:5000/query" method="post">
+    <textarea name="query"></textarea>
+    <input type="submit" value="Run Query">
+</form>
+    파일 업로드 결과: <br>
+    {{ uploadResult }} <br> <br>
+    쿼리 실행 결과: <br>
+    {{ queryResult }}
 </body>
 </html>

@@ -1,15 +1,10 @@
 import pandas as pd
 from flask import Flask, request, render_template
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
-import sqlite3 as sql
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
-app.config['SECRET_KEY'] = "random string"
 
-engine = create_engine('sqlite://', echo=False)
+engine = create_engine('sqlite:///csv.db', echo=False)
 
 
 @app.route("/")
@@ -17,14 +12,24 @@ def home():
     return render_template("index.html")
 
 
-@app.route("/upload", methods=["GET", "POST"])
+@app.route("/upload", methods=["POST"])
 def upload():
-    if request.method == "GET":
-        return render_template("upload.html")
-    df = pd.read_csv(request.files.get('file'))
-    df.to_sql('csv1', con=engine)
-    return str(engine.execute("SELECT * FROM csv1").fetchall())
-    # return render_template('upload.html', shape=df.shape, columns=df.columns.values)
+    f = request.files['file']
+    f_name = f.filename.split(".")[0]
+
+    df = pd.read_csv(f)
+    df.to_sql(f_name, con=engine, if_exists='replace')
+
+    upload_result = 'File uploaded to DB("csv.db" file). The table name is ' + f_name + ' and its shape is ' + str(
+        df.shape)
+    return render_template('index.html', uploadResult=upload_result)
+
+
+@app.route("/query", methods=["POST"])
+def query():
+    q = request.form['query']
+    query_result = str(engine.execute(str(q)).fetchall())
+    return render_template('index.html', queryResult=query_result)
 
 
 if __name__ == "__main__":
